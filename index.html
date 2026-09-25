@@ -83,6 +83,22 @@ nav.tabs button:hover{color:var(--text);}
 }
 .chip input{display:none;}
 .chip.on{background:rgba(224,169,74,0.16);border-color:var(--accent-dim);color:var(--accent);}
+
+.easy-mode-banner{
+  display:flex;align-items:center;gap:14px;width:100%;box-sizing:border-box;
+  background:var(--card);border:1.5px solid var(--line);border-radius:14px;
+  padding:14px 18px;margin-bottom:18px;cursor:pointer;transition:all .15s;user-select:none;
+}
+.easy-mode-banner:hover{border-color:var(--accent-dim);}
+.easy-mode-banner input{display:none;}
+.easy-mode-banner .emb-icon{font-size:1.5rem;flex-shrink:0;}
+.easy-mode-banner .emb-text{display:flex;flex-direction:column;gap:2px;}
+.easy-mode-banner .emb-title{font-family:var(--sans);font-weight:700;font-size:0.95rem;color:var(--text);}
+.easy-mode-banner .emb-sub{font-family:var(--sans);font-size:0.8rem;color:var(--text-dim);}
+.easy-mode-banner.on{background:linear-gradient(135deg, rgba(224,169,74,0.16), var(--card));border-color:var(--accent-dim);}
+.easy-mode-banner.on .emb-title{color:var(--accent);}
+.easy-mode-banner.on .emb-sub::after{content:" — on now";color:var(--accent);}
+
 select, .segbtn{
   background:var(--ink-2);border:1px solid var(--line);color:var(--text);
   border-radius:10px;padding:7px 12px;font-family:var(--sans);font-size:0.85rem;cursor:pointer;
@@ -587,6 +603,14 @@ kbd{font-family:var(--mono);background:var(--ink-2);border:1px solid var(--line)
   </section>
 
   <section id="panel-conj" class="panel">
+    <label class="easy-mode-banner" id="easyModeChip">
+      <input type="checkbox" id="easyMode">
+      <span class="emb-icon">💡</span>
+      <span class="emb-text">
+        <span class="emb-title">Easy mode</span>
+        <span class="emb-sub">Adds a "reveal a letter" button and multiple-choice options — tap to turn on</span>
+      </span>
+    </label>
     <div class="controls">
       <div class="row">
         <label class="grp-title">Tense</label>
@@ -611,9 +635,6 @@ kbd{font-family:var(--mono);background:var(--ink-2);border:1px solid var(--line)
           <button data-grp="aux">Auxiliaries &amp; modals</button>
         </div>
         <label class="chip on" style="margin-left:auto;"><input type="checkbox" id="ignoreAccents" checked>Ignore accents/capitals</label>
-      </div>
-      <div class="row">
-        <label class="chip" id="easyModeChip"><input type="checkbox" id="easyMode">💡 Easy mode — letter hints &amp; multiple choice</label>
       </div>
     </div>
 
@@ -1630,17 +1651,18 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
 });
 
 document.querySelectorAll('.chip[data-tense], .chip[data-pers]').forEach(chip=>{
-  chip.addEventListener('click', ()=>{
-    chip.classList.toggle('on');
+  chip.querySelector('input').addEventListener('change', function(){
+    chip.classList.toggle('on', this.checked);
     startConjSession();
   });
 });
-document.getElementById('ignoreAccents').closest('.chip').addEventListener('click', function(){
-  this.classList.toggle('on');
+document.getElementById('ignoreAccents').addEventListener('change', function(){
+  this.closest('.chip').classList.toggle('on', this.checked);
 });
-document.getElementById('easyModeChip').addEventListener('click', function(){
-  this.classList.toggle('on');
-  conjEasyMode = this.classList.contains('on');
+document.getElementById('easyMode').addEventListener('change', function(){
+  const chip = document.getElementById('easyModeChip');
+  chip.classList.toggle('on', this.checked);
+  conjEasyMode = this.checked;
   if(conjCurrentKey) renderConjCard();
 });
 
@@ -1957,8 +1979,8 @@ function startPracticeWeak(){
 
 populateMcqTopics();
 document.getElementById('fichesCat').addEventListener('change', startFichesSession);
-document.getElementById('ffOnlyChip').addEventListener('click', function(){
-  this.classList.toggle('on');
+document.getElementById('ffOnly').addEventListener('change', function(){
+  document.getElementById('ffOnlyChip').classList.toggle('on', this.checked);
   startFichesSession();
 });
 document.querySelectorAll('#fichesDirSeg button').forEach(btn=>{
