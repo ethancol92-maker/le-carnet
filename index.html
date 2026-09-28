@@ -706,6 +706,37 @@ kbd{font-family:var(--mono);background:var(--ink-2);border:1px solid var(--line)
 .cog-chips{display:flex;flex-wrap:wrap;gap:6px;}
 .cog-chip{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:0.82rem;color:var(--text);}
 .cog-chip i{font-family:var(--serif);}
+.opp-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:6px;}
+#oppTypeSeg small{font-family:var(--mono);font-size:0.68rem;opacity:.7;margin-left:3px;}
+.opp-cover-chip{cursor:pointer;}
+.opp-pair{
+  display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:stretch;
+  background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 12px;margin-bottom:10px;
+}
+.opp-side{min-width:0;}
+.opp-b{text-align:left;}
+.opp-mid{align-self:center;color:var(--text-dim);font-size:1.1rem;padding:0 2px;}
+.opp-fr{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;}
+.opp-fr > span{font-family:var(--serif);font-style:italic;font-size:1.15rem;color:var(--accent);line-height:1.2;overflow-wrap:anywhere;}
+.opp-b .opp-fr > span{color:var(--easy);}
+.opp-speak{padding:2px 7px !important;font-size:0.8rem !important;}
+.opp-tr{font-size:0.82rem;color:var(--text);line-height:1.35;margin-top:2px;overflow-wrap:anywhere;}
+.opp-tr + .opp-tr{color:var(--text-dim);}
+.opp-flag{font-family:var(--mono);font-size:0.6rem;font-weight:700;color:var(--accent);margin-right:5px;}
+.opp-note{grid-column:1 / -1;font-size:0.78rem;color:var(--text-dim);border-top:1px dashed var(--line);padding-top:7px;margin-top:2px;line-height:1.45;}
+.opp-b.covered{position:relative;cursor:pointer;border-radius:10px;}
+.opp-b.covered > *{visibility:hidden;}
+.opp-b.covered::after{
+  content:'tap to reveal';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:var(--ink-2);border:1px dashed var(--line);border-radius:10px;color:var(--text-dim);
+  font-family:var(--mono);font-size:0.7rem;letter-spacing:.04em;
+}
+@media (max-width:420px){
+  .opp-pair{padding:10px 9px;gap:6px;}
+  .opp-fr > span{font-size:1.05rem;}
+  .opp-tr{font-size:0.78rem;}
+  #oppTypeSeg button{padding:6px 9px;font-size:0.8rem;}
+}
 </style>
 </head>
 <body>
@@ -726,6 +757,7 @@ kbd{font-family:var(--mono);background:var(--ink-2);border:1px solid var(--line)
     <button class="tab-btn" data-tab="gramex">Drills</button>
     <button class="tab-btn" data-tab="fiches">Vocabulary</button>
     <button class="tab-btn" data-tab="equiv">Equivalents</button>
+    <button class="tab-btn" data-tab="opp">Opposites</button>
   </nav>
 
   <!-- ============ CONJUGATION PANEL ============ -->
@@ -917,6 +949,11 @@ kbd{font-family:var(--mono);background:var(--ink-2);border:1px solid var(--line)
   <section id="panel-equiv" class="panel">
     <div id="equivLanding"></div>
     <div id="equivDetail" style="display:none;"></div>
+  </section>
+
+  <!-- ============ OPPOSITES PANEL ============ -->
+  <section id="panel-opp" class="panel">
+    <div id="oppWrap"></div>
   </section>
 
   <!-- ============ FICHES PANEL ============ -->
@@ -2223,6 +2260,78 @@ function closeEquiv(){
   document.getElementById('equivLanding').scrollIntoView({block:'start'});
 }
 renderEquivLanding();
+
+const OPPOSITES = [{"type":"adj","a":["chaud","hot, warm","caldo","горячий, жаркий"],"b":["froid","cold","freddo","холодный"],"note":"For the weather use il fait: il fait chaud / il fait froid."},{"type":"adj","a":["heureux","happy","felice","счастливый"],"b":["triste","sad","triste","грустный"]},{"type":"adj","a":["grand","big, tall","grande","большой"],"b":["petit","small, short","piccolo","маленький"]},{"type":"adj","a":["bon","good","buono","хороший"],"b":["mauvais","bad","cattivo","плохой"],"note":"As adverbs: bien / mal (well / badly)."},{"type":"adj","a":["nouveau","new","nuovo","новый"],"b":["vieux","old","vecchio","старый"],"note":"Before a vowel: un nouvel ami, un vieil ami."},{"type":"adj","a":["jeune","young","giovane","молодой"],"b":["âgé","elderly","anziano","пожилой"]},{"type":"adj","a":["facile","easy","facile","лёгкий"],"b":["difficile","difficult","difficile","трудный"]},{"type":"adj","a":["rapide","fast","veloce","быстрый"],"b":["lent","slow","lento","медленный"]},{"type":"adj","a":["fort","strong","forte","сильный"],"b":["faible","weak","debole","слабый"]},{"type":"adj","a":["long","long","lungo","длинный"],"b":["court","short","corto","короткий"],"note":"Court is for length; a short person is petit."},{"type":"adj","a":["haut","high","alto","высокий"],"b":["bas","low","basso","низкий"]},{"type":"adj","a":["lourd","heavy","pesante","тяжёлый"],"b":["léger","light","leggero","лёгкий"]},{"type":"adj","a":["plein","full","pieno","полный"],"b":["vide","empty","vuoto","пустой"]},{"type":"adj","a":["propre","clean","pulito","чистый"],"b":["sale","dirty","sporco","грязный"],"note":"Before the noun, propre means 'own': ma propre voiture."},{"type":"adj","a":["cher","expensive","caro","дорогой"],"b":["bon marché","cheap","economico","дешёвый"],"note":"Bon marché never changes form."},{"type":"adj","a":["riche","rich","ricco","богатый"],"b":["pauvre","poor","povero","бедный"]},{"type":"adj","a":["ouvert","open","aperto","открытый"],"b":["fermé","closed","chiuso","закрытый"]},{"type":"adj","a":["clair","light, bright","chiaro","светлый"],"b":["sombre","dark","scuro","тёмный"]},{"type":"adj","a":["large","wide","largo","широкий"],"b":["étroit","narrow","stretto","узкий"],"note":"Large means wide, not big — a classic false friend."},{"type":"adj","a":["épais","thick","spesso","толстый, густой"],"b":["mince","thin","sottile","тонкий"]},{"type":"adj","a":["gros","fat, big","grasso","толстый (о человеке)"],"b":["maigre","skinny","magro","худой"]},{"type":"adj","a":["beau","beautiful, handsome","bello","красивый"],"b":["laid","ugly","brutto","некрасивый"],"note":"Before a vowel: un bel homme."},{"type":"adj","a":["vrai","true","vero","верный, настоящий"],"b":["faux","false, fake","falso","ложный, фальшивый"]},{"type":"adj","a":["sûr","safe","sicuro","безопасный"],"b":["dangereux","dangerous","pericoloso","опасный"],"note":"Sûr also means 'sure': je suis sûr."},{"type":"adj","a":["calme","quiet, calm","tranquillo","тихий, спокойный"],"b":["bruyant","noisy","rumoroso","шумный"]},{"type":"adj","a":["doux","soft, mild","morbido, dolce","мягкий"],"b":["dur","hard","duro","твёрдый, жёсткий"]},{"type":"adj","a":["sec","dry","secco","сухой"],"b":["mouillé","wet","bagnato","мокрый"],"note":"Feminine of sec: sèche."},{"type":"adj","a":["sucré","sweet","dolce","сладкий"],"b":["salé","salty, savoury","salato","солёный"]},{"type":"adj","a":["cru","raw","crudo","сырой"],"b":["cuit","cooked","cotto","варёный, приготовленный"]},{"type":"adj","a":["vivant","alive","vivo","живой"],"b":["mort","dead","morto","мёртвый"]},{"type":"adj","a":["malade","ill, sick","malato","больной"],"b":["en bonne santé","healthy","sano","здоровый"]},{"type":"adj","a":["proche","near, close","vicino","близкий"],"b":["lointain","far, distant","lontano","далёкий"],"note":"As adverbs: près / loin."},{"type":"adj","a":["premier","first","primo","первый"],"b":["dernier","last","ultimo","последний"]},{"type":"adj","a":["simple","simple","semplice","простой"],"b":["compliqué","complicated","complicato","сложный"]},{"type":"adj","a":["gentil","kind, nice","gentile","добрый"],"b":["méchant","mean, nasty","cattivo","злой"]},{"type":"adj","a":["poli","polite","educato","вежливый"],"b":["grossier","rude","maleducato","грубый"]},{"type":"adj","a":["intéressant","interesting","interessante","интересный"],"b":["ennuyeux","boring","noioso","скучный"]},{"type":"adj","a":["fatigué","tired","stanco","уставший"],"b":["reposé","rested","riposato","отдохнувший"]},{"type":"adj","a":["occupé","busy","occupato","занятой"],"b":["libre","free","libero","свободный"]},{"type":"adj","a":["content","pleased","contento","довольный"],"b":["fâché","angry","arrabbiato","сердитый"]},{"type":"adj","a":["courageux","brave","coraggioso","смелый"],"b":["lâche","cowardly","vigliacco","трусливый"]},{"type":"adj","a":["intelligent","clever","intelligente","умный"],"b":["bête","stupid, silly","stupido","глупый"]},{"type":"adj","a":["célèbre","famous","famoso","знаменитый"],"b":["inconnu","unknown","sconosciuto","неизвестный"]},{"type":"adj","a":["public","public","pubblico","общественный"],"b":["privé","private","privato","частный"],"note":"Feminine of public: publique."},{"type":"adj","a":["pareil","the same, alike","uguale","одинаковый"],"b":["différent","different","diverso","разный"]},{"type":"adj","a":["lisse","smooth","liscio","гладкий"],"b":["rugueux","rough","ruvido","шершавый"]},{"type":"adj","a":["présent","present","presente","присутствующий"],"b":["absent","absent","assente","отсутствующий"]},{"type":"adj","a":["ancien","ancient, former","antico","древний, бывший"],"b":["moderne","modern","moderno","современный"],"note":"Before the noun, ancien means 'former': mon ancien professeur."},{"type":"adj","a":["gauche","left","sinistro","левый"],"b":["droit","right","destro","правый"],"note":"Droit also means 'straight': tout droit = straight ahead."},{"type":"adj","a":["généreux","generous","generoso","щедрый"],"b":["avare","stingy","avaro","скупой"]},{"type":"verb","a":["pousser","push","spingere","толкать"],"b":["tirer","pull","tirare","тянуть"],"note":"The words on shop doors: POUSSEZ / TIREZ."},{"type":"verb","a":["augmenter","increase","aumentare","увеличивать"],"b":["diminuer","decrease","diminuire","уменьшать"]},{"type":"verb","a":["ouvrir","open","aprire","открывать"],"b":["fermer","close","chiudere","закрывать"]},{"type":"verb","a":["entrer","go in","entrare","входить"],"b":["sortir","go out","uscire","выходить"],"note":"The signs say ENTRÉE / SORTIE."},{"type":"verb","a":["monter","go up","salire","подниматься"],"b":["descendre","go down","scendere","спускаться"]},{"type":"verb","a":["arriver","arrive","arrivare","прибывать"],"b":["partir","leave","partire","уезжать"]},{"type":"verb","a":["acheter","buy","comprare","покупать"],"b":["vendre","sell","vendere","продавать"]},{"type":"verb","a":["donner","give","dare","давать"],"b":["prendre","take","prendere","брать"]},{"type":"verb","a":["commencer","begin","cominciare","начинать"],"b":["finir","finish","finire","заканчивать"]},{"type":"verb","a":["gagner","win","vincere","выигрывать"],"b":["perdre","lose","perdere","проигрывать"],"note":"Gagner also means 'to earn': gagner de l'argent."},{"type":"verb","a":["aimer","love, like","amare","любить"],"b":["détester","hate","odiare","ненавидеть"]},{"type":"verb","a":["allumer","switch on","accendere","включать"],"b":["éteindre","switch off","spegnere","выключать"]},{"type":"verb","a":["se souvenir de","remember","ricordare","помнить"],"b":["oublier","forget","dimenticare","забывать"]},{"type":"verb","a":["cacher","hide","nascondere","прятать"],"b":["montrer","show","mostrare","показывать"]},{"type":"verb","a":["se lever","get up","alzarsi","вставать"],"b":["se coucher","go to bed","andare a letto","ложиться спать"]},{"type":"verb","a":["accepter","accept","accettare","принимать"],"b":["refuser","refuse","rifiutare","отказываться"]},{"type":"verb","a":["demander","ask","chiedere","спрашивать"],"b":["répondre","answer","rispondere","отвечать"]},{"type":"verb","a":["envoyer","send","mandare","отправлять"],"b":["recevoir","receive","ricevere","получать"]},{"type":"verb","a":["remplir","fill","riempire","наполнять"],"b":["vider","empty","svuotare","опустошать"]},{"type":"verb","a":["attaquer","attack","attaccare","нападать"],"b":["défendre","defend","difendere","защищать"],"note":"Défendre also means 'to forbid': défense de fumer."},{"type":"verb","a":["construire","build","costruire","строить"],"b":["détruire","destroy","distruggere","разрушать"]},{"type":"verb","a":["rire","laugh","ridere","смеяться"],"b":["pleurer","cry","piangere","плакать"]},{"type":"verb","a":["naître","be born","nascere","рождаться"],"b":["mourir","die","morire","умирать"],"note":"Both take être: je suis né(e), il est mort."},{"type":"verb","a":["parler","speak","parlare","говорить"],"b":["se taire","be quiet","tacere","молчать"],"note":"Tais-toi ! = Be quiet!"},{"type":"verb","a":["prêter","lend","prestare","давать взаймы"],"b":["emprunter","borrow","prendere in prestito","брать взаймы"]},{"type":"verb","a":["réussir","succeed","riuscire","добиваться успеха"],"b":["échouer","fail","fallire","терпеть неудачу"],"note":"Réussir un examen = to pass an exam; échouer à un examen = to fail it."},{"type":"verb","a":["se marier","get married","sposarsi","жениться, выходить замуж"],"b":["divorcer","divorce","divorziare","разводиться"]},{"type":"verb","a":["s'endormir","fall asleep","addormentarsi","засыпать"],"b":["se réveiller","wake up","svegliarsi","просыпаться"]},{"type":"verb","a":["ajouter","add","aggiungere","добавлять"],"b":["enlever","remove, take off","togliere","убирать, снимать"]},{"type":"verb","a":["permettre","allow","permettere","разрешать"],"b":["interdire","forbid","vietare","запрещать"]},{"type":"little","a":["toujours","always","sempre","всегда"],"b":["jamais","never","mai","никогда"],"note":"Jamais needs ne: je ne mange jamais de viande."},{"type":"little","a":["tôt","early","presto","рано"],"b":["tard","late","tardi","поздно"],"note":"Being late for something is en retard."},{"type":"little","a":["beaucoup","a lot","molto","много"],"b":["peu","a little, not much","poco","мало"]},{"type":"little","a":["avant","before","prima","до, раньше"],"b":["après","after","dopo","после"]},{"type":"little","a":["ici","here","qui","здесь"],"b":["là-bas","over there","laggiù","там"]},{"type":"little","a":["dedans","inside","dentro","внутри"],"b":["dehors","outside","fuori","снаружи"]},{"type":"little","a":["devant","in front of","davanti","перед"],"b":["derrière","behind","dietro","позади"]},{"type":"little","a":["sur","on","su","на"],"b":["sous","under","sotto","под"]},{"type":"little","a":["avec","with","con","с"],"b":["sans","without","senza","без"]},{"type":"little","a":["plus","more","più","больше"],"b":["moins","less","meno","меньше"]},{"type":"little","a":["bien","well","bene","хорошо"],"b":["mal","badly","male","плохо"]},{"type":"little","a":["souvent","often","spesso","часто"],"b":["rarement","rarely","raramente","редко"]},{"type":"little","a":["quelque chose","something","qualcosa","что-то"],"b":["rien","nothing","niente","ничего"],"note":"Rien needs ne: je ne vois rien."},{"type":"little","a":["partout","everywhere","dappertutto","везде"],"b":["nulle part","nowhere","da nessuna parte","нигде"]},{"type":"noun","a":["le jour","day","il giorno","день"],"b":["la nuit","night","la notte","ночь"]},{"type":"noun","a":["le début","beginning","l'inizio","начало"],"b":["la fin","end","la fine","конец"]},{"type":"noun","a":["la question","question","la domanda","вопрос"],"b":["la réponse","answer","la risposta","ответ"]},{"type":"noun","a":["la guerre","war","la guerra","война"],"b":["la paix","peace","la pace","мир"]},{"type":"noun","a":["l'ami","friend","l'amico","друг"],"b":["l'ennemi","enemy","il nemico","враг"]},{"type":"noun","a":["le succès","success","il successo","успех"],"b":["l'échec","failure","l'insuccesso","неудача"]}];
+
+// ================= Opposites (100 antonym pairs, FR/EN/IT/RU) =================
+const OPP_TYPES = [['all','All'],['adj','Adjectives'],['verb','Verbs'],['little','Little words'],['noun','Nouns']];
+const OPP_TYPE_LABEL = {adj:'Adjectives', verb:'Verbs', little:'Adverbs, prepositions & little words', noun:'Nouns'};
+let oppType = 'all', oppQuery = '', oppCover = false;
+const oppNorm = s => s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+
+function oppSpeakBtn(fr){
+  if(typeof SPEECH_SUPPORTED !== 'undefined' && !SPEECH_SUPPORTED) return '';
+  return `<button type="button" class="mini-btn speak-btn opp-speak" data-speak="${encodeURIComponent(fr)}" data-lang="fr" title="Écouter">🔊</button>`;
+}
+function oppSideHtml(s, cls){
+  return `
+    <div class="opp-side ${cls}">
+      <div class="opp-fr"><span>${s[0]}</span>${oppSpeakBtn(s[0])}</div>
+      <div class="opp-tr"><span class="opp-flag">EN</span>${s[1]}</div>
+      <div class="opp-tr"><span class="opp-flag">IT</span>${s[2]}</div>
+      <div class="opp-tr"><span class="opp-flag">RU</span>${s[3]}</div>
+    </div>`;
+}
+function oppPairHtml(p){
+  return `
+    <div class="opp-pair">
+      ${oppSideHtml(p.a,'opp-a')}
+      <div class="opp-mid">↔</div>
+      ${oppSideHtml(p.b,'opp-b' + (oppCover ? ' covered' : ''))}
+      ${p.note ? `<div class="opp-note">💡 ${p.note}</div>` : ''}
+    </div>`;
+}
+function renderOpposites(){
+  const wrap = document.getElementById('oppWrap');
+  if(!wrap) return;
+  const counts = {all: OPPOSITES.length}; OPPOSITES.forEach(p=> counts[p.type]=(counts[p.type]||0)+1);
+  wrap.innerHTML = `
+    <div class="pattern-intro">
+      <p><b>${OPPOSITES.length} everyday opposites</b> (${OPPOSITES.length*2} words), side by side with English, Italian and Russian. Adjectives are given in the masculine; a 💡 note flags irregular forms and traps.</p>
+      <p>Turn on <b>Cover the opposite</b> to test yourself: the right-hand word is hidden until you tap it.</p>
+    </div>
+    <input type="search" id="oppSearch" class="cog-search" placeholder="Search French, English, Italian or Russian…" value="${oppQuery.replace(/"/g,'&quot;')}">
+    <div class="opp-controls">
+      <div class="seg" id="oppTypeSeg">${OPP_TYPES.map(([k,l])=>`<button data-type="${k}" class="${k===oppType?'active':''}">${l} <small>${counts[k]||0}</small></button>`).join('')}</div>
+      <label class="chip opp-cover-chip ${oppCover?'on':''}" id="oppCoverChip"><input type="checkbox" id="oppCover" ${oppCover?'checked':''}> Cover the opposite</label>
+    </div>
+    <div id="oppList"></div>`;
+  wrap.querySelectorAll('#oppTypeSeg button').forEach(b=> b.addEventListener('click', ()=>{ oppType=b.dataset.type; renderOpposites(); }));
+  const s = wrap.querySelector('#oppSearch');
+  s.addEventListener('input', ()=>{ oppQuery = s.value; renderOppList(); });
+  wrap.querySelector('#oppCover').addEventListener('change', function(){
+    oppCover = this.checked; document.getElementById('oppCoverChip').classList.toggle('on', oppCover); renderOppList();
+  });
+  renderOppList();
+}
+function renderOppList(){
+  const out = document.getElementById('oppList');
+  const q = oppNorm(oppQuery.trim());
+  let list = OPPOSITES.filter(p => oppType==='all' || p.type===oppType);
+  if(q) list = list.filter(p => oppNorm(p.a.join(' ')+' '+p.b.join(' ')).includes(q));
+  if(!list.length){ out.innerHTML = '<div class="cog-hint">No opposites found.</div>'; return; }
+  let html = '', cur = null;
+  list.forEach(p=>{
+    if(p.type !== cur){ cur = p.type; html += `<div class="equiv-section-title">${OPP_TYPE_LABEL[cur]}</div>`; }
+    html += oppPairHtml(p);
+  });
+  out.innerHTML = html;
+  out.querySelectorAll('.opp-b.covered').forEach(el=> el.addEventListener('click', e=>{
+    if(e.target.closest('.mini-btn')) return;
+    el.classList.remove('covered');
+  }));
+}
+renderOpposites();
 
 // ================= UI wiring =================
 document.querySelectorAll('.tab-btn').forEach(btn=>{
