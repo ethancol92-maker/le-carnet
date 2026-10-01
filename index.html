@@ -819,6 +819,33 @@ kbd{font-family:var(--mono);background:var(--ink-2);border:1px solid var(--line)
 .gc-body{margin:0 0 10px;color:var(--text);font-size:0.95rem;line-height:1.65;}
 .gc-take{margin:0 0 14px;font-size:0.9rem;line-height:1.55;color:var(--text);background:rgba(111,168,217,0.08);border-left:3px solid var(--easy);padding:8px 12px;border-radius:8px;}
 .gc-take b{color:var(--easy);margin-right:4px;}
+
+/* ---- Autoplay ---- */
+#apCat{max-width:100%;}
+#apVoice{max-width:100%;flex:1 1 220px;}
+.ap-voice-test{padding:7px 12px;font-size:0.85rem;}
+.ap-voice-note{width:100%;font-size:0.78rem;color:var(--text-dim);line-height:1.45;}
+.ap-range{width:100%;max-width:420px;accent-color:var(--accent);}
+.controls label.grp-title b{color:var(--accent);font-family:var(--mono);text-transform:none;letter-spacing:0;}
+.ap-transport{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:4px 0 10px;}
+.ap-play{min-width:120px;}
+.ap-play.playing{background:var(--ink-2);color:var(--accent);border:1px solid var(--accent);}
+.ap-status{color:var(--text-dim);font-size:0.85rem;font-family:var(--mono);}
+.ap-progress{margin-left:auto;color:var(--text-dim);font-size:0.82rem;font-family:var(--mono);}
+.ap-bar{height:3px;background:var(--line);border-radius:2px;overflow:hidden;margin-bottom:14px;}
+.ap-bar-fill{height:100%;width:0;background:var(--accent);transition:width .3s;}
+.ap-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px 22px;min-height:230px;cursor:pointer;}
+.ap-card.flipped{border-color:var(--accent-dim);}
+.ap-cat{font-family:var(--mono);font-size:0.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;}
+.ap-fr{font-family:var(--serif);font-style:italic;font-size:2rem;line-height:1.2;color:var(--accent);margin-bottom:12px;overflow-wrap:anywhere;}
+.ap-gender{font-family:var(--mono);font-style:normal;font-size:0.7rem;vertical-align:middle;border:1px solid var(--line);border-radius:999px;padding:2px 8px;color:var(--easy);}
+.ap-gender.f{color:var(--again);}
+.ap-sentence{font-family:var(--serif);font-size:1.15rem;line-height:1.5;color:var(--text);}
+.ap-card{display:flex;flex-direction:column;}
+.ap-it-hint{margin-top:auto;padding-top:22px;font-size:0.7rem;line-height:1.4;color:var(--text-dim);opacity:.75;}
+.ap-it-hint .flag{font-family:var(--mono);font-size:0.6rem;font-weight:700;color:var(--accent);margin-right:6px;opacity:.8;}
+.ap-back{margin-top:18px;padding-top:16px;border-top:1px dashed var(--line);}
+@media (max-width:600px){ .ap-fr{font-size:1.6rem;} .ap-card{padding:20px 16px;} }
 </style>
 </head>
 <body>
@@ -838,6 +865,7 @@ kbd{font-family:var(--mono);background:var(--ink-2);border:1px solid var(--line)
     <button class="tab-btn" data-tab="grammar">Grammar</button>
     <button class="tab-btn" data-tab="gramex">Drills</button>
     <button class="tab-btn" data-tab="fiches">Vocabulary</button>
+    <button class="tab-btn" data-tab="auto">Autoplay</button>
     <button class="tab-btn" data-tab="equiv">Equivalents</button>
     <button class="tab-btn" data-tab="opp">Opposites</button>
     <button class="tab-btn" data-tab="pron">Pronunciation</button>
@@ -1037,6 +1065,11 @@ kbd{font-family:var(--mono);background:var(--ink-2);border:1px solid var(--line)
   <!-- ============ OPPOSITES PANEL ============ -->
   <section id="panel-opp" class="panel">
     <div id="oppWrap"></div>
+  </section>
+
+  <!-- ============ AUTOPLAY PANEL ============ -->
+  <section id="panel-auto" class="panel">
+    <div id="apWrap"></div>
   </section>
 
   <!-- ============ PRONUNCIATION PANEL ============ -->
@@ -1357,16 +1390,35 @@ function capFirst(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
 // ---------- audio: speech synthesis + YouGlish ----------
 const SPEECH_SUPPORTED = ('speechSynthesis' in window);
 let voiceByLang = {fr: null, ru: null, it: null};
+const FR_VOICE_LS_KEY = 'french_app_fr_voice';
+// Every French voice this device offers, France French first.
+function frenchVoices(){
+  if(!SPEECH_SUPPORTED) return [];
+  const norm = v => (v.lang || '').toLowerCase().replace('_', '-');
+  const list = window.speechSynthesis.getVoices().filter(v => norm(v).startsWith('fr'));
+  const rank = v => norm(v) === 'fr-fr' ? 0 : 1;
+  return list.map((v, i) => [v, i]).sort((a, b) => (rank(a[0]) - rank(b[0])) || (a[1] - b[1])).map(x => x[0]);
+}
+// The browser doesn't say whether a voice is male or female, so this recognises the common named voices only.
+const VOICE_MALE = /\b(thomas|paul|henri|claude|nicolas|daniel|jacques|jean|antoine|remy|rémy|eddy|reed|rocko|grandpa|alain|mathieu|fabrice|gerard|gérard)\b/i;
+const VOICE_FEMALE = /\b(am[ée]lie|hortense|julie|denise|audrey|aur[ée]lie|marie|virginie|c[ée]line|sylvie|[ée]lo[iï]se|brigitte|vivienne|caroline|chantal|flo|sandy|shelley|grandma|charline|coralie|jos[ée]phine|yvette)\b/i;
+function voiceGenderHint(name){ return VOICE_MALE.test(name) ? 'male' : (VOICE_FEMALE.test(name) ? 'female' : ''); }
+function setFrenchVoice(name){
+  try{ if(name) localStorage.setItem(FR_VOICE_LS_KEY, name); else localStorage.removeItem(FR_VOICE_LS_KEY); }catch(e){ /* ignore */ }
+  pickVoices();
+}
 function pickVoices(){
   if(!SPEECH_SUPPORTED) return;
   const voices = window.speechSynthesis.getVoices();
-  voiceByLang.fr = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('fr')) || null;
+  const fr = frenchVoices();
+  let savedName = null; try{ savedName = localStorage.getItem(FR_VOICE_LS_KEY); }catch(e){ /* ignore */ }
+  voiceByLang.fr = fr.find(v => v.name === savedName) || fr[0] || null;
   voiceByLang.ru = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ru')) || null;
   voiceByLang.it = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('it')) || null;
 }
 if(SPEECH_SUPPORTED){
   pickVoices();
-  window.speechSynthesis.onvoiceschanged = pickVoices;
+  window.speechSynthesis.onvoiceschanged = () => { pickVoices(); if(typeof apRenderVoices === 'function') apRenderVoices(); };
 }
 function speakText(text, langKey){
   if(!SPEECH_SUPPORTED || !text) return;
@@ -2692,7 +2744,47 @@ function renderStreak(){
   document.getElementById('streakNum').textContent = computeStreak();
 }
 
-let wotdIdx = dayNumber() % FICHES.length;
+// ---- Home info boxes: random order without repeats ----
+// Each box remembers which items it has already shown (on this device) and picks a random unseen one next.
+// When every item has been shown, the box starts a fresh random round.
+const INFO_LS_KEY = 'french_app_info_seen';
+let infoState = {};
+async function loadInfoState(){
+  let raw = null;
+  if(typeof window.storage !== 'undefined' && window.storage && window.storage.get){
+    try{ const res = await window.storage.get('info_seen', false); raw = res && res.value ? res.value : null; }catch(e){ raw = null; }
+  }
+  if(raw === null){ try{ raw = localStorage.getItem(INFO_LS_KEY); }catch(e){ raw = null; } }
+  try{ infoState = raw ? (JSON.parse(raw) || {}) : {}; }catch(e){ infoState = {}; }
+}
+function saveInfoState(){
+  const val = JSON.stringify(infoState);
+  if(typeof window.storage !== 'undefined' && window.storage && window.storage.set){
+    try{ Promise.resolve(window.storage.set('info_seen', val, false)).catch(()=>{}); return; }catch(e){ /* fall through */ }
+  }
+  try{ localStorage.setItem(INFO_LS_KEY, val); }catch(e){ /* in-memory only */ }
+}
+function infoNext(key, n){
+  const st = infoState[key] || (infoState[key] = {cur:-1, seen:[]});
+  let seen = new Set((st.seen || []).filter(i => Number.isInteger(i) && i >= 0 && i < n));
+  let pool = []; for(let i=0;i<n;i++) if(!seen.has(i)) pool.push(i);
+  if(!pool.length){                       // round finished: start again, but not with the item on screen
+    seen = new Set();
+    for(let i=0;i<n;i++) if(i !== st.cur || n === 1) pool.push(i);
+  }
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  seen.add(pick);
+  st.cur = pick; st.seen = [...seen]; st.day = todayStr();
+  saveInfoState();
+  return pick;
+}
+function infoStart(key, n){               // same item all day; a new unseen one on a new day
+  const st = infoState[key];
+  if(st && st.day === todayStr() && Number.isInteger(st.cur) && st.cur >= 0 && st.cur < n) return st.cur;
+  return infoNext(key, n);
+}
+
+let wotdIdx = 0;
 function renderWordOfDay(){
   const it = FICHES[wotdIdx];
   document.getElementById('wotdBody').innerHTML = `
@@ -2704,21 +2796,21 @@ function renderWordOfDay(){
       <div class="fiche-tr-row"><span class="flag">RU</span><span class="val">${it.ru}</span></div>
     </div>`;
 }
-function advanceWordOfDay(){ wotdIdx = (wotdIdx+1) % FICHES.length; renderWordOfDay(); }
+function advanceWordOfDay(){ wotdIdx = infoNext('wotd', FICHES.length); renderWordOfDay(); }
 
-let funFactIdx = (dayNumber()+11) % FUN_FACTS.length;
+let funFactIdx = 0;
 function renderFunFact(){
   document.getElementById('factBody').textContent = FUN_FACTS[funFactIdx];
 }
-function advanceFunFact(){ funFactIdx = (funFactIdx+1) % FUN_FACTS.length; renderFunFact(); }
+function advanceFunFact(){ funFactIdx = infoNext('fact', FUN_FACTS.length); renderFunFact(); }
 
-let cultureFactIdx = (dayNumber()+23) % CULTURE_FACTS.length;
+let cultureFactIdx = 0;
 function renderCultureFact(){
   document.getElementById('cultureFactBody').textContent = CULTURE_FACTS[cultureFactIdx];
 }
-function advanceCultureFact(){ cultureFactIdx = (cultureFactIdx+1) % CULTURE_FACTS.length; renderCultureFact(); }
+function advanceCultureFact(){ cultureFactIdx = infoNext('culture', CULTURE_FACTS.length); renderCultureFact(); }
 
-let grammarCmpIdx = (dayNumber()+37) % GRAMMAR_COMPARISON.length;
+let grammarCmpIdx = 0;
 function renderGrammarComparison(){
   const item = GRAMMAR_COMPARISON[grammarCmpIdx];
   const examplesHtml = item.examples.map(ex => `
@@ -2731,9 +2823,9 @@ function renderGrammarComparison(){
     ${item.title ? `<div class="gc-title">${item.title}</div><p class="gc-context">${item.context}</p><p class="gc-body">${item.body}</p><p class="gc-take"><b>In short:</b> ${item.take}</p>` : `<div class="grammar-fact-text">${item.text}</div>`}
     <div class="grammar-examples">${examplesHtml}</div>`;
 }
-function advanceGrammarComparison(){ grammarCmpIdx = (grammarCmpIdx+1) % GRAMMAR_COMPARISON.length; renderGrammarComparison(); }
+function advanceGrammarComparison(){ grammarCmpIdx = infoNext('grammar', GRAMMAR_COMPARISON.length); renderGrammarComparison(); }
 
-let pragmaticsIdx = (dayNumber()+53) % PRAGMATICS_FACTS.length;
+let pragmaticsIdx = 0;
 function renderPragmaticsFact(){
   const item = PRAGMATICS_FACTS[pragmaticsIdx];
   const linesHtml = item.dialogue.map(line => `
@@ -2746,16 +2838,16 @@ function renderPragmaticsFact(){
     <div class="pragmatics-fact-text">${item.text}</div>
     <div class="pragmatics-dialogue">${linesHtml}</div>`;
 }
-function advancePragmaticsFact(){ pragmaticsIdx = (pragmaticsIdx+1) % PRAGMATICS_FACTS.length; renderPragmaticsFact(); }
+function advancePragmaticsFact(){ pragmaticsIdx = infoNext('pragmatics', PRAGMATICS_FACTS.length); renderPragmaticsFact(); }
 
-let memTipsIdx = (dayNumber()+71) % MEMORY_TIPS.length;
+let memTipsIdx = 0;
 function renderMemoryTip(){
   const item = MEMORY_TIPS[memTipsIdx];
   document.getElementById('memTipsBody').innerHTML = `
     <div class="memtips-title">${item.title}</div>
     <div class="memtips-body">${item.text}</div>`;
 }
-function advanceMemoryTip(){ memTipsIdx = (memTipsIdx+1) % MEMORY_TIPS.length; renderMemoryTip(); }
+function advanceMemoryTip(){ memTipsIdx = infoNext('memtips', MEMORY_TIPS.length); renderMemoryTip(); }
 
 // Builds the full addressable pool of every SRS-tracked item across all four tabs,
 // each tagged with its type and the exact key used in SRS[type].
@@ -3076,6 +3168,13 @@ document.getElementById('memTipsCard').addEventListener('click', advanceMemoryTi
   renderGrammarLanding();
   startFichesSession();
   renderStreak();
+  await loadInfoState();
+  wotdIdx = infoStart('wotd', FICHES.length);
+  funFactIdx = infoStart('fact', FUN_FACTS.length);
+  cultureFactIdx = infoStart('culture', CULTURE_FACTS.length);
+  grammarCmpIdx = infoStart('grammar', GRAMMAR_COMPARISON.length);
+  pragmaticsIdx = infoStart('pragmatics', PRAGMATICS_FACTS.length);
+  memTipsIdx = infoStart('memtips', MEMORY_TIPS.length);
   renderWordOfDay();
   renderFunFact();
   renderCultureFact();
@@ -3169,6 +3268,251 @@ document.querySelectorAll('#fichesViewSeg button').forEach(b=> b.addEventListene
 document.getElementById('fichesListSearch').addEventListener('input', function(){ fichesListQuery = this.value; renderFichesList(); });
 document.getElementById('fichesCat').addEventListener('change', ()=>{ if(fichesView==='list') renderFichesList(); });
 document.getElementById('ffOnly').addEventListener('change', ()=>{ setTimeout(()=>{ if(fichesView==='list') renderFichesList(); }, 0); });
+
+
+// ================= Autoplay (hands-free listening through the flashcards) =================
+// Per card: French word + example sentence spoken aloud (repeated N times), then the translations shown silently, then next card.
+const AP_LS_KEY = 'french_app_autoplay';
+const ap = {cat:'__all__', reps:2, rate:0.9, gap:0.6, hold:3, shuffle:true};
+(function(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(AP_LS_KEY) || 'null');
+    if(saved && typeof saved === 'object'){
+      if(typeof saved.cat === 'string') ap.cat = saved.cat;
+      if([1,2,3,4,5].includes(saved.reps)) ap.reps = saved.reps;
+      if([0.8,0.9,1].includes(saved.rate)) ap.rate = saved.rate;
+      if(typeof saved.gap === 'number') ap.gap = Math.min(1.5, Math.max(0.2, saved.gap));
+      if(typeof saved.hold === 'number') ap.hold = Math.min(8, Math.max(1, saved.hold));
+      if(typeof saved.shuffle === 'boolean') ap.shuffle = saved.shuffle;
+    }
+  }catch(e){ /* defaults */ }
+})();
+function apSave(){ try{ localStorage.setItem(AP_LS_KEY, JSON.stringify(ap)); }catch(e){ /* ignore */ } }
+
+let apQueue = [], apPos = 0, apPlaying = false, apGen = 0, apFlipped = false;
+let apPending = null;      // {finish, timer} for the step currently being waited on
+let apUtter = null;        // keep a reference so the browser doesn't drop the utterance mid-speech
+let apWakeLock = null;
+
+function apSpeechText(fr){ return fr.replace(/\s*\([^)]*\)/g, '').replace(/ \/ /g, ', ').trim(); }
+function apBuildQueue(){
+  let list = FICHES.filter(f => ap.cat === '__all__' || f.cat === ap.cat);
+  if(!list.length){ ap.cat = '__all__'; list = FICHES.slice(); }
+  if(ap.shuffle){
+    list = list.slice();
+    for(let i = list.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; }
+  }
+  apQueue = list; apPos = 0;
+}
+function apStopPending(){
+  if(apPending){ clearTimeout(apPending.timer); const f = apPending.finish; apPending = null; f(); }
+  if(SPEECH_SUPPORTED) window.speechSynthesis.cancel();
+}
+function apWait(ms){
+  return new Promise(res => {
+    const p = {finish: res, timer: null};
+    p.timer = setTimeout(() => { if(apPending === p) apPending = null; res(); }, ms);
+    apPending = p;
+  });
+}
+function apSpeak(text){
+  const est = Math.max(900, text.length * 95 / ap.rate);
+  if(!SPEECH_SUPPORTED) return apWait(est);
+  return new Promise(res => {
+    let done = false;
+    const p = {finish: null, timer: null};
+    const fin = () => { if(done) return; done = true; clearTimeout(p.timer); if(apPending === p) apPending = null; res(); };
+    p.finish = fin;
+    p.timer = setTimeout(fin, est * 2.5 + 4000);   // safety net if the browser never reports the end
+    apPending = p;
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'fr-FR';
+    if(voiceByLang.fr) u.voice = voiceByLang.fr;
+    u.rate = ap.rate;
+    u.onend = fin; u.onerror = fin;
+    apUtter = u;
+    window.speechSynthesis.speak(u);
+  });
+}
+function apStatus(text){ const el = document.getElementById('apStatus'); if(el) el.textContent = text; }
+function apShow(flipped){
+  apFlipped = flipped;
+  const it = apQueue[apPos]; const st = document.getElementById('apStage');
+  if(!it || !st) return;
+  const g = nounGenderInfo(it.fr);
+  st.innerHTML = `
+    <div class="ap-card ${flipped ? 'flipped' : ''}" id="apCard">
+      <div class="ap-cat">${it.cat}</div>
+      <div class="ap-fr">${it.fr}${g && flipped ? ` <span class="ap-gender ${g.gender==='f' ? 'f' : 'm'}">${g.gender==='f' ? 'fem.' : 'masc.'}</span>` : ''}</div>
+      <div class="ap-sentence">${it.sentence || ''}</div>
+      ${flipped ? `
+      <div class="ap-back">
+        <div class="fiche-tr-grid">
+          <div class="fiche-tr-row"><span class="flag">EN</span><span class="val">${it.en}</span></div>
+          <div class="fiche-tr-row"><span class="flag">IT</span><span class="val">${it.it}</span></div>
+          <div class="fiche-tr-row"><span class="flag">RU</span><span class="val">${it.ru}</span></div>
+        </div>
+        ${ficheSentenceTrHtml(it, false)}
+      </div>` : `
+      <div class="ap-it-hint" aria-hidden="true"><span class="flag">IT</span>${it.it}${it.sentIt ? ` · ${it.sentIt}` : ''}</div>`}
+    </div>`;
+  const pr = document.getElementById('apProgress');
+  if(pr) pr.textContent = `${apPos + 1} / ${apQueue.length}`;
+  const bar = document.getElementById('apBarFill');
+  if(bar) bar.style.width = (100 * (apPos + 1) / apQueue.length) + '%';
+}
+async function apRun(){
+  const gen = ++apGen;
+  const alive = () => gen === apGen && apPlaying;
+  while(alive()){
+    const it = apQueue[apPos];
+    apShow(false);
+    await apWait(250); if(!alive()) return;
+    for(let r = 1; r <= ap.reps && alive(); r++){
+      apStatus(`🔊 Listening — ${r} of ${ap.reps}`);
+      await apSpeak(apSpeechText(it.fr)); if(!alive()) return;
+      await apWait(ap.gap * 1000); if(!alive()) return;
+      if(it.sentence){
+        await apSpeak(it.sentence); if(!alive()) return;
+        await apWait(ap.gap * 1000); if(!alive()) return;
+      }
+    }
+    apShow(true);
+    apStatus('Translation');
+    await apWait(ap.hold * 1000); if(!alive()) return;
+    apPos++;
+    if(apPos >= apQueue.length) apBuildQueue();   // finished the set: start again (reshuffled if shuffle is on)
+  }
+}
+async function apWake(on){
+  try{
+    if(on && 'wakeLock' in navigator && !apWakeLock){ apWakeLock = await navigator.wakeLock.request('screen'); apWakeLock.addEventListener('release', () => { apWakeLock = null; }); }
+    if(!on && apWakeLock){ const w = apWakeLock; apWakeLock = null; await w.release(); }
+  }catch(e){ apWakeLock = null; }
+}
+function apUpdatePlayBtn(){
+  const b = document.getElementById('apPlayBtn');
+  if(b){ b.textContent = apPlaying ? '⏸ Pause' : '▶ Play'; b.classList.toggle('playing', apPlaying); }
+}
+function apPlay(){
+  if(apPlaying) return;
+  if(!apQueue.length) apBuildQueue();
+  apPlaying = true; apUpdatePlayBtn(); apWake(true);
+  try{ document.querySelector('.ap-transport').scrollIntoView({block:'start', behavior:'smooth'}); }catch(e){ /* older browsers */ }
+  apRun();
+}
+function apPause(){
+  if(!apPlaying && !apPending) return;
+  apPlaying = false; apGen++; apStopPending(); apUpdatePlayBtn(); apWake(false);
+  apStatus('Paused');
+}
+function apJump(delta){
+  const was = apPlaying;
+  apGen++; apStopPending();
+  apPos = (apPos + delta + apQueue.length) % apQueue.length;
+  if(was){ apRun(); } else { apShow(false); apStatus('Paused'); }
+}
+function apRestartQueue(){
+  const was = apPlaying;
+  apGen++; apStopPending();
+  apBuildQueue();
+  if(was){ apRun(); } else { apShow(false); apStatus('Ready'); }
+}
+
+function apRenderVoices(){
+  const sel = document.getElementById('apVoice'), note = document.getElementById('apVoiceNote');
+  if(!sel) return;
+  const list = frenchVoices();
+  const label = v => { const g = voiceGenderHint(v.name); return `${v.name} — ${(v.lang || '').replace('_','-')}${g ? ' · ' + g : ''}`; };
+  sel.innerHTML = list.length
+    ? list.map(v => `<option value="${v.name.replace(/"/g,'&quot;')}">${label(v)}</option>`).join('')
+    : '<option value="">Device default</option>';
+  sel.disabled = list.length < 2;
+  if(voiceByLang.fr) sel.value = voiceByLang.fr.name;
+  if(note) note.textContent = !SPEECH_SUPPORTED ? 'This browser has no built-in voice.'
+    : list.length === 0 ? 'No French voice found yet. Your device will use its default voice.'
+    : list.length === 1 ? 'This device offers only one French voice. More can usually be added in the device\u2019s text-to-speech settings.'
+    : `${list.length} French voices on this device. Voices are supplied by the device, so the list differs between your phone and computer.`;
+}
+function renderAutoplay(){
+  const wrap = document.getElementById('apWrap');
+  if(!wrap) return;
+  const cats = []; FICHES.forEach(f => { if(!cats.includes(f.cat)) cats.push(f.cat); });
+  if(ap.cat !== '__all__' && !cats.includes(ap.cat)) ap.cat = '__all__';
+  const count = c => FICHES.filter(f => f.cat === c).length;
+  wrap.innerHTML = `
+    <div class="pattern-intro">
+      <p>Hands-free listening. Each card plays the French word and its example sentence aloud, then shows the English, Italian and Russian silently, then moves on. ${SPEECH_SUPPORTED ? '' : '<b>This browser has no built-in voice, so cards will advance silently.</b>'}</p>
+    </div>
+    <div class="controls">
+      <div class="row">
+        <label class="grp-title" for="apCat">Category</label>
+        <select id="apCat">
+          <option value="__all__">All flashcards (${FICHES.length})</option>
+          ${cats.map(c => `<option value="${c.replace(/"/g,'&quot;')}" ${c===ap.cat?'selected':''}>${c} (${count(c)})</option>`).join('')}
+        </select>
+        <div class="seg" id="apOrderSeg">
+          <button data-shuffle="1" class="${ap.shuffle?'active':''}">Shuffled</button>
+          <button data-shuffle="0" class="${ap.shuffle?'':'active'}">In order</button>
+        </div>
+      </div>
+      <div class="row">
+        <label class="grp-title">French audio: repetitions per card</label>
+        <div class="seg" id="apRepsSeg">${[1,2,3,4,5].map(n => `<button data-reps="${n}" class="${n===ap.reps?'active':''}">${n}×</button>`).join('')}</div>
+      </div>
+      <div class="row">
+        <label class="grp-title">Audio speed</label>
+        <div class="seg" id="apRateSeg">${[0.8,0.9,1].map(r => `<button data-rate="${r}" class="${r===ap.rate?'active':''}">${r.toFixed(1)}</button>`).join('')}</div>
+      </div>
+      <div class="row">
+        <label class="grp-title" for="apVoice">French voice (used for all French audio in the app)</label>
+        <select id="apVoice"></select>
+        <button type="button" class="btn ghost ap-voice-test" id="apVoiceTest">🔊 Test</button>
+        <div class="ap-voice-note" id="apVoiceNote"></div>
+      </div>
+      <div class="row">
+        <label class="grp-title" for="apGap">Gap between audio plays: <b id="apGapVal">${ap.gap.toFixed(1)} s</b></label>
+        <input type="range" id="apGap" class="ap-range" min="0.2" max="1.5" step="0.1" value="${ap.gap}">
+      </div>
+      <div class="row">
+        <label class="grp-title" for="apHold">Time on the translation: <b id="apHoldVal">${ap.hold.toFixed(1)} s</b></label>
+        <input type="range" id="apHold" class="ap-range" min="1" max="8" step="0.5" value="${ap.hold}">
+      </div>
+    </div>
+    <div class="ap-transport">
+      <button type="button" class="btn ghost" id="apPrevBtn" aria-label="Previous card">⏮</button>
+      <button type="button" class="btn ap-play" id="apPlayBtn">▶ Play</button>
+      <button type="button" class="btn ghost" id="apNextBtn" aria-label="Next card">⏭</button>
+      <span class="ap-status" id="apStatus">Ready</span>
+      <span class="ap-progress" id="apProgress"></span>
+    </div>
+    <div class="ap-bar"><div class="ap-bar-fill" id="apBarFill"></div></div>
+    <div id="apStage"></div>`;
+  apBuildQueue(); apShow(false);
+  const $ = id => document.getElementById(id);
+  $('apCat').value = ap.cat;
+  $('apCat').addEventListener('change', e => { ap.cat = e.target.value; apSave(); apRestartQueue(); });
+  const seg = (id, attr, apply) => wrap.querySelectorAll('#' + id + ' button').forEach(b => b.addEventListener('click', () => {
+    wrap.querySelectorAll('#' + id + ' button').forEach(x => x.classList.toggle('active', x === b));
+    apply(b.dataset[attr]); apSave();
+  }));
+  seg('apOrderSeg', 'shuffle', v => { ap.shuffle = v === '1'; apRestartQueue(); });
+  seg('apRepsSeg', 'reps', v => { ap.reps = parseInt(v, 10); });
+  seg('apRateSeg', 'rate', v => { ap.rate = parseFloat(v); });
+  $('apGap').addEventListener('input', e => { ap.gap = parseFloat(e.target.value); $('apGapVal').textContent = ap.gap.toFixed(1) + ' s'; apSave(); });
+  $('apHold').addEventListener('input', e => { ap.hold = parseFloat(e.target.value); $('apHoldVal').textContent = ap.hold.toFixed(1) + ' s'; apSave(); });
+  apRenderVoices();
+  $('apVoice').addEventListener('change', e => { setFrenchVoice(e.target.value); apRenderVoices(); });
+  $('apVoiceTest').addEventListener('click', () => { if(apPlaying) apPause(); speakText('Bonjour ! Voici la voix que vous avez choisie.', 'fr'); });
+  $('apPlayBtn').addEventListener('click', () => { apPlaying ? apPause() : apPlay(); });
+  $('apPrevBtn').addEventListener('click', () => apJump(-1));
+  $('apNextBtn').addEventListener('click', () => apJump(1));
+  $('apStage').addEventListener('click', () => { if(!apPlaying) apShow(!apFlipped); });
+}
+renderAutoplay();
+// Leaving the tab pauses playback. The screen is kept awake while playing, where the browser allows it.
+document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => { if(btn.dataset.tab !== 'auto') apPause(); }));
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible' && apPlaying) apWake(true); });
 
 </script>
 </body>
