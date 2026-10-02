@@ -828,23 +828,36 @@ kbd{font-family:var(--mono);background:var(--ink-2);border:1px solid var(--line)
 .ap-range{width:100%;max-width:420px;accent-color:var(--accent);}
 .controls label.grp-title b{color:var(--accent);font-family:var(--mono);text-transform:none;letter-spacing:0;}
 .ap-transport{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:4px 0 10px;}
-.ap-play{min-width:120px;}
-.ap-play.playing{background:var(--ink-2);color:var(--accent);border:1px solid var(--accent);}
 .ap-status{color:var(--text-dim);font-size:0.85rem;font-family:var(--mono);}
 .ap-progress{margin-left:auto;color:var(--text-dim);font-size:0.82rem;font-family:var(--mono);}
 .ap-bar{height:3px;background:var(--line);border-radius:2px;overflow:hidden;margin-bottom:14px;}
 .ap-bar-fill{height:100%;width:0;background:var(--accent);transition:width .3s;}
-.ap-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px 22px;min-height:230px;cursor:pointer;}
-.ap-card.flipped{border-color:var(--accent-dim);}
+.ap-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px 22px 22px;display:flex;flex-direction:column;}
+.ap-top{min-height:120px;}
 .ap-cat{font-family:var(--mono);font-size:0.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;}
 .ap-fr{font-family:var(--serif);font-style:italic;font-size:2rem;line-height:1.2;color:var(--accent);margin-bottom:12px;overflow-wrap:anywhere;}
 .ap-gender{font-family:var(--mono);font-style:normal;font-size:0.7rem;vertical-align:middle;border:1px solid var(--line);border-radius:999px;padding:2px 8px;color:var(--easy);}
 .ap-gender.f{color:var(--again);}
 .ap-sentence{font-family:var(--serif);font-size:1.15rem;line-height:1.5;color:var(--text);}
-.ap-card{display:flex;flex-direction:column;}
-.ap-it-hint{margin-top:auto;padding-top:22px;font-size:0.7rem;line-height:1.4;color:var(--text-dim);opacity:.75;}
-.ap-it-hint .flag{font-family:var(--mono);font-size:0.6rem;font-weight:700;color:var(--accent);margin-right:6px;opacity:.8;}
-.ap-back{margin-top:18px;padding-top:16px;border-top:1px dashed var(--line);}
+.ap-mid{display:flex;justify-content:center;align-items:center;padding:22px 0;}
+.ap-circle{
+  width:84px;height:84px;border-radius:50%;border:none;cursor:pointer;flex:0 0 auto;
+  background:var(--accent);color:#26190a;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 22px rgba(224,169,74,0.28);transition:transform .12s, background .15s, box-shadow .15s;
+  -webkit-tap-highlight-color:transparent;
+}
+.ap-circle:hover{filter:brightness(1.06);}
+.ap-circle:active{transform:scale(0.94);}
+.ap-circle:focus-visible{outline:3px solid var(--text);outline-offset:3px;}
+.ap-circle.playing{background:var(--ink-2);color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset;}
+.ap-ico-play{width:0;height:0;border-style:solid;border-width:16px 0 16px 27px;border-color:transparent transparent transparent currentColor;margin-left:7px;}
+.ap-ico-pause{width:26px;height:30px;border-left:9px solid currentColor;border-right:9px solid currentColor;box-sizing:border-box;}
+.ap-bottom{border-top:1px dashed var(--line);padding-top:16px;display:flex;flex-direction:column;gap:12px;}
+.ap-tr-row{display:flex;gap:12px;align-items:baseline;}
+.ap-tr-row .flag{font-family:var(--mono);font-size:0.7rem;font-weight:700;color:var(--accent);width:24px;flex:0 0 24px;}
+.ap-tr-text{min-width:0;}
+.ap-tr-word{font-family:var(--serif);font-size:1.08rem;line-height:1.35;color:var(--text);overflow-wrap:anywhere;}
+.ap-tr-sent{font-family:var(--serif);font-style:italic;font-size:0.95rem;line-height:1.4;color:var(--text-dim);margin-top:2px;overflow-wrap:anywhere;}
 @media (max-width:600px){ .ap-fr{font-size:1.6rem;} .ap-card{padding:20px 16px;} }
 
 /* Autoplay: expanded (full-screen) card */
@@ -857,18 +870,18 @@ body.ap-focus-on #apFocusWrap, #apFocusWrap:fullscreen{
 body.ap-focus-on #apStage{flex:1 1 auto;min-height:0;order:1;display:flex;}
 body.ap-focus-on .ap-bar{order:2;margin:10px 0 8px;flex:0 0 auto;}
 body.ap-focus-on .ap-transport{order:3;margin:0;flex:0 0 auto;flex-wrap:nowrap;gap:8px;}
-body.ap-focus-on .ap-card{flex:1 1 auto;min-height:0;overflow-y:auto;justify-content:center;padding:26px 22px;}
-body.ap-focus-on .ap-fr{font-size:clamp(2rem, 9vw, 3.4rem);}
-body.ap-focus-on .ap-sentence{font-size:clamp(1.2rem, 5vw, 1.8rem);}
-body.ap-focus-on .ap-card:not(.flipped) .ap-cat{margin-top:auto;}
-body.ap-focus-on .ap-it-hint{margin-top:auto;padding-top:28px;font-size:0.78rem;}
-body.ap-focus-on .ap-card.flipped{justify-content:flex-start;}
-body.ap-focus-on .ap-card.flipped .ap-fr{font-size:clamp(1.6rem, 7vw, 2.4rem);}
-body.ap-focus-on .ap-card.flipped .ap-sentence{font-size:clamp(1.05rem, 4.2vw, 1.4rem);}
+body.ap-focus-on .ap-card{flex:1 1 auto;min-height:0;overflow-y:auto;padding:24px 20px 20px;}
+body.ap-focus-on .ap-top{flex:1 1 0;min-height:0;display:flex;flex-direction:column;justify-content:center;}
+body.ap-focus-on .ap-bottom{flex:1 1 0;min-height:0;justify-content:center;}
+body.ap-focus-on .ap-mid{flex:0 0 auto;padding:14px 0;}
+body.ap-focus-on .ap-circle{width:96px;height:96px;}
+body.ap-focus-on .ap-fr{font-size:clamp(1.9rem, 8.5vw, 3.2rem);}
+body.ap-focus-on .ap-sentence{font-size:clamp(1.15rem, 4.8vw, 1.7rem);}
+body.ap-focus-on .ap-tr-word{font-size:clamp(1.1rem, 4.6vw, 1.5rem);}
+body.ap-focus-on .ap-tr-sent{font-size:clamp(0.95rem, 3.9vw, 1.25rem);}
 body.ap-focus-on .ap-status{display:none;}
 body.ap-focus-on .ap-progress{margin-left:auto;}
-body.ap-focus-on .ap-play{min-width:0;flex:1 1 auto;}
-body.ap-focus-on .ap-transport .btn{padding-left:12px;padding-right:12px;white-space:nowrap;}
+body.ap-focus-on .ap-transport .btn{padding-left:14px;padding-right:14px;white-space:nowrap;}
 </style>
 </head>
 <body>
@@ -3295,9 +3308,9 @@ document.getElementById('ffOnly').addEventListener('change', ()=>{ setTimeout(()
 
 
 // ================= Autoplay (hands-free listening through the flashcards) =================
-// Per card: French word + example sentence spoken aloud (repeated N times), then the translations shown silently, then next card.
+// Per card: French word + example sentence spoken aloud (repeated N times), with the translations visible on the same card, then next card.
 const AP_LS_KEY = 'french_app_autoplay';
-const ap = {cat:'__all__', reps:2, rate:0.9, gap:0.6, hold:3, shuffle:true};
+const ap = {cat:'__all__', reps:2, rate:0.9, gap:0.6, shuffle:true};
 (function(){
   try{
     const saved = JSON.parse(localStorage.getItem(AP_LS_KEY) || 'null');
@@ -3306,14 +3319,13 @@ const ap = {cat:'__all__', reps:2, rate:0.9, gap:0.6, hold:3, shuffle:true};
       if([1,2,3,4,5].includes(saved.reps)) ap.reps = saved.reps;
       if([0.8,0.9,1].includes(saved.rate)) ap.rate = saved.rate;
       if(typeof saved.gap === 'number') ap.gap = Math.min(1.5, Math.max(0.2, saved.gap));
-      if(typeof saved.hold === 'number') ap.hold = Math.min(8, Math.max(1, saved.hold));
       if(typeof saved.shuffle === 'boolean') ap.shuffle = saved.shuffle;
     }
   }catch(e){ /* defaults */ }
 })();
 function apSave(){ try{ localStorage.setItem(AP_LS_KEY, JSON.stringify(ap)); }catch(e){ /* ignore */ } }
 
-let apQueue = [], apPos = 0, apPlaying = false, apGen = 0, apFlipped = false;
+let apQueue = [], apPos = 0, apPlaying = false, apGen = 0;
 let apPending = null;      // {finish, timer} for the step currently being waited on
 let apUtter = null;        // keep a reference so the browser doesn't drop the utterance mid-speech
 let apWakeLock = null;
@@ -3359,27 +3371,21 @@ function apSpeak(text){
   });
 }
 function apStatus(text){ const el = document.getElementById('apStatus'); if(el) el.textContent = text; }
-function apShow(flipped){
-  apFlipped = flipped;
-  const it = apQueue[apPos]; const st = document.getElementById('apStage');
-  if(!it || !st) return;
+function apShow(){
+  const it = apQueue[apPos];
+  const top = document.getElementById('apTop'), bottom = document.getElementById('apBottom');
+  if(!it || !top || !bottom) return;
   const g = nounGenderInfo(it.fr);
-  st.innerHTML = `
-    <div class="ap-card ${flipped ? 'flipped' : ''}" id="apCard">
-      <div class="ap-cat">${it.cat}</div>
-      <div class="ap-fr">${it.fr}${g && flipped ? ` <span class="ap-gender ${g.gender==='f' ? 'f' : 'm'}">${g.gender==='f' ? 'fem.' : 'masc.'}</span>` : ''}</div>
-      <div class="ap-sentence">${it.sentence || ''}</div>
-      ${flipped ? `
-      <div class="ap-back">
-        <div class="fiche-tr-grid">
-          <div class="fiche-tr-row"><span class="flag">EN</span><span class="val">${it.en}</span></div>
-          <div class="fiche-tr-row"><span class="flag">IT</span><span class="val">${it.it}</span></div>
-          <div class="fiche-tr-row"><span class="flag">RU</span><span class="val">${it.ru}</span></div>
-        </div>
-        ${ficheSentenceTrHtml(it, false)}
-      </div>` : `
-      <div class="ap-it-hint" aria-hidden="true"><span class="flag">IT</span>${it.it}${it.sentIt ? ` · ${it.sentIt}` : ''}</div>`}
+  top.innerHTML = `
+    <div class="ap-cat">${it.cat}</div>
+    <div class="ap-fr">${it.fr}${g ? ` <span class="ap-gender ${g.gender==='f' ? 'f' : 'm'}">${g.gender==='f' ? 'fem.' : 'masc.'}</span>` : ''}</div>
+    <div class="ap-sentence">${it.sentence || ''}</div>`;
+  const row = (flag, word, sent) => `
+    <div class="ap-tr-row">
+      <span class="flag">${flag}</span>
+      <div class="ap-tr-text"><div class="ap-tr-word">${word}</div>${sent ? `<div class="ap-tr-sent">${sent}</div>` : ''}</div>
     </div>`;
+  bottom.innerHTML = row('EN', it.en, it.sentEn) + row('IT', it.it, it.sentIt) + row('RU', it.ru, it.sentRu);
   const pr = document.getElementById('apProgress');
   if(pr) pr.textContent = `${apPos + 1} / ${apQueue.length}`;
   const bar = document.getElementById('apBarFill');
@@ -3390,7 +3396,7 @@ async function apRun(){
   const alive = () => gen === apGen && apPlaying;
   while(alive()){
     const it = apQueue[apPos];
-    apShow(false);
+    apShow();
     await apWait(250); if(!alive()) return;
     for(let r = 1; r <= ap.reps && alive(); r++){
       apStatus(`🔊 Listening — ${r} of ${ap.reps}`);
@@ -3401,9 +3407,6 @@ async function apRun(){
         await apWait(ap.gap * 1000); if(!alive()) return;
       }
     }
-    apShow(true);
-    apStatus('Translation');
-    await apWait(ap.hold * 1000); if(!alive()) return;
     apPos++;
     if(apPos >= apQueue.length) apBuildQueue();   // finished the set: start again (reshuffled if shuffle is on)
   }
@@ -3416,7 +3419,7 @@ async function apWake(on){
 }
 function apUpdatePlayBtn(){
   const b = document.getElementById('apPlayBtn');
-  if(b){ b.textContent = apPlaying ? '⏸ Pause' : '▶ Play'; b.classList.toggle('playing', apPlaying); }
+  if(b){ b.innerHTML = apPlaying ? '<span class="ap-ico-pause" aria-hidden="true"></span>' : '<span class="ap-ico-play" aria-hidden="true"></span>'; b.setAttribute('aria-label', apPlaying ? 'Pause' : 'Play'); b.classList.toggle('playing', apPlaying); }
 }
 function apPlay(){
   if(apPlaying) return;
@@ -3434,13 +3437,13 @@ function apJump(delta){
   const was = apPlaying;
   apGen++; apStopPending();
   apPos = (apPos + delta + apQueue.length) % apQueue.length;
-  if(was){ apRun(); } else { apShow(false); apStatus('Paused'); }
+  if(was){ apRun(); } else { apShow(); apStatus('Paused'); }
 }
 function apRestartQueue(){
   const was = apPlaying;
   apGen++; apStopPending();
   apBuildQueue();
-  if(was){ apRun(); } else { apShow(false); apStatus('Ready'); }
+  if(was){ apRun(); } else { apShow(); apStatus('Ready'); }
 }
 
 // Expanded view: the card fills the whole screen, with only the play controls underneath.
@@ -3482,7 +3485,7 @@ function renderAutoplay(){
   const count = c => FICHES.filter(f => f.cat === c).length;
   wrap.innerHTML = `
     <div class="pattern-intro">
-      <p>Hands-free listening. Each card plays the French word and its example sentence aloud, then shows the English, Italian and Russian silently, then moves on. ${SPEECH_SUPPORTED ? '' : '<b>This browser has no built-in voice, so cards will advance silently.</b>'}</p>
+      <p>Hands-free listening. Each card plays the French word and its example sentence aloud, with the English, Italian and Russian shown underneath (never spoken), then moves on to the next card. ${SPEECH_SUPPORTED ? '' : '<b>This browser has no built-in voice, so cards will advance silently.</b>'}</p>
     </div>
     <div class="controls">
       <div class="row">
@@ -3514,24 +3517,25 @@ function renderAutoplay(){
         <label class="grp-title" for="apGap">Gap between audio plays: <b id="apGapVal">${ap.gap.toFixed(1)} s</b></label>
         <input type="range" id="apGap" class="ap-range" min="0.2" max="1.5" step="0.1" value="${ap.gap}">
       </div>
-      <div class="row">
-        <label class="grp-title" for="apHold">Time on the translation: <b id="apHoldVal">${ap.hold.toFixed(1)} s</b></label>
-        <input type="range" id="apHold" class="ap-range" min="1" max="8" step="0.5" value="${ap.hold}">
-      </div>
     </div>
     <div id="apFocusWrap">
       <div class="ap-transport">
         <button type="button" class="btn ghost" id="apPrevBtn" aria-label="Previous card">⏮</button>
-        <button type="button" class="btn ap-play" id="apPlayBtn">▶ Play</button>
         <button type="button" class="btn ghost" id="apNextBtn" aria-label="Next card">⏭</button>
         <button type="button" class="btn ghost ap-expand" id="apExpandBtn" aria-label="Expand the card to fill the screen">⤢ Expand</button>
         <span class="ap-status" id="apStatus">Ready</span>
         <span class="ap-progress" id="apProgress"></span>
       </div>
       <div class="ap-bar"><div class="ap-bar-fill" id="apBarFill"></div></div>
-      <div id="apStage"></div>
+      <div id="apStage">
+        <div class="ap-card" id="apCard">
+          <div class="ap-top" id="apTop"></div>
+          <div class="ap-mid"><button type="button" class="ap-circle" id="apPlayBtn" aria-label="Play"><span class="ap-ico-play" aria-hidden="true"></span></button></div>
+          <div class="ap-bottom" id="apBottom"></div>
+        </div>
+      </div>
     </div>`;
-  apBuildQueue(); apShow(false);
+  apBuildQueue(); apShow();
   const $ = id => document.getElementById(id);
   $('apCat').value = ap.cat;
   $('apCat').addEventListener('change', e => { ap.cat = e.target.value; apSave(); apRestartQueue(); });
@@ -3543,7 +3547,6 @@ function renderAutoplay(){
   seg('apRepsSeg', 'reps', v => { ap.reps = parseInt(v, 10); });
   seg('apRateSeg', 'rate', v => { ap.rate = parseFloat(v); });
   $('apGap').addEventListener('input', e => { ap.gap = parseFloat(e.target.value); $('apGapVal').textContent = ap.gap.toFixed(1) + ' s'; apSave(); });
-  $('apHold').addEventListener('input', e => { ap.hold = parseFloat(e.target.value); $('apHoldVal').textContent = ap.hold.toFixed(1) + ' s'; apSave(); });
   apRenderVoices();
   $('apVoice').addEventListener('change', e => { setFrenchVoice(e.target.value); apRenderVoices(); });
   $('apVoiceTest').addEventListener('click', () => { if(apPlaying) apPause(); speakText('Bonjour ! Voici la voix que vous avez choisie.', 'fr'); });
@@ -3551,7 +3554,6 @@ function renderAutoplay(){
   $('apPlayBtn').addEventListener('click', () => { apPlaying ? apPause() : apPlay(); });
   $('apPrevBtn').addEventListener('click', () => apJump(-1));
   $('apNextBtn').addEventListener('click', () => apJump(1));
-  $('apStage').addEventListener('click', () => { if(apPlaying) apPause(); else apShow(!apFlipped); });
 }
 renderAutoplay();
 // Leaving the tab pauses playback. The screen is kept awake while playing, where the browser allows it.
